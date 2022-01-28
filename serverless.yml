@@ -1,0 +1,28 @@
+service: socialpython
+
+frameworkVersion: '2'
+
+custom:
+  wsgi:
+    app: handler.app
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: '20201221'
+  timeout: 30
+
+functions:
+  api:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: /{proxy+}
+          method: ANY
+
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
