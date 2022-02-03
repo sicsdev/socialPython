@@ -2,8 +2,9 @@
 import urllib.request
 from tqdm import tqdm
 from urllib import request
-import random,sys,time,uuid,warnings,os,hashlib,requests,gzip,json,string
+import random, sys, time, uuid, warnings, os, hashlib, requests, gzip, json, string, re
 from bs4 import BeautifulSoup
+import base64
 warnings.filterwarnings("ignore")
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
@@ -435,3 +436,130 @@ def testpost():
     sc = Scrapper(eq)
     posts=sc.get_user_posts(username,30)
     return jsonify({"success": "true", "videos": posts})
+
+
+def cover_decode(url):
+    
+
+    url = url
+
+    # querystring = {"_nc_ht":"instagram.fisb1-2.fna.fbcdn.net","_nc_cat":"104","_nc_ohc":"jCivadoFrZAAX9lKvzn","edm":"ACHbZRIBAAAA","ccb":"7-4","oh":"00_AT9T2v9x2qeWOYAHXkirwcPW51YoGrDqiIrfQxsNTBxvwA","oe":"61FFF84E","_nc_sid":"4a9e64"}
+
+    headers = {
+        # "host": "instagram.fisb1-2.fna.fbcdn.net",
+        "connection": "keep-alive",
+        "sec-ch-ua": '''"" Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96""''',
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": '''""Android""''',
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Linux; Android 7.1.2; G011A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Mobile Safari/537.36",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "sec-fetch-site": "none",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-user": "?1",
+        "sec-fetch-dest": "document",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-US,en;q=0.9"
+    }
+
+    response = requests.request("GET", url, headers=headers)
+
+    return base64.b64encode(response.content).decode('UTF-8')
+
+def get_id(username):
+    url = "https://www.instagram.com/{}/".format(username)
+
+    headers = {
+        "host": "www.instagram.com",
+        "connection": "keep-alive",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "sec-fetch-site": "none",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-user": "?1",
+        "sec-fetch-dest": "document",
+        "sec-ch-ua": '''"" Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97""''',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '''""Windows""''',
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-US,en;q=0.9",
+        "cookie": '''"mid=YfrxZAALAAENuqC_YJlpJWXoMLfb; ig_did=3F05F76C-C24D-47EF-853D-3CD6A8424311; ig_nrcb=1; csrftoken=AE6VzpnuLvofb1d179S2hyRt0ZVuJMnr; ds_user_id=25843790699; sessionid=25843790699%3Aar7fFluG8BBOoh%3A26; shbid="18123\05425843790699\0541675371766:01f7d438bfc42816858d77435228a13d10ba50d7224bdd5f4378e4483f779f9931b42b11"; shbts="1643835766\05425843790699\0541675371766:01f7be21fe382c786ef630cab0af65e0ebfcbcc8e73a71c7dccc525b983e970e24af5eb9"; rur="NAO\05425843790699\0541675371770:01f7f9c0ea99fb64b8ded9d30713cc1ede52b76a57f7108e06618fe6854a810cc525f417""'''
+    }
+
+    response = requests.request("GET", url, headers=headers)
+
+    ID=((re.search(r'"logging_page_id":"(.*?)",', str(response.text)).group(1)).split("_"))[1]
+
+    return ID
+
+def list_of_reels(username):
+    username=username
+    ID = get_id(username)
+    # print(ID)
+    count=0
+    max_id=""
+    DATA=[]
+    while True:
+        url = "https://i.instagram.com/api/v1/clips/user/"
+        payload = "max_id={}&target_user_id={}".format(max_id,str(ID))
+        headers = {
+            "x-ig-app-locale": "en_US",
+            "x-ig-device-locale": "en_US",
+            "x-ig-mapped-locale": "en_US",
+            "x-pigeon-rawclienttime": "1643479789.325",
+            "x-ig-bandwidth-speed-kbps": "3699.000",
+            "x-ig-bandwidth-totalbytes-b": "14674191",
+            "x-ig-bandwidth-totaltime-ms": "5498",
+            "x-ig-app-startup-country": "US",
+            "x-ig-timezone-offset": "28800",
+            "x-ig-nav-chain": "ClipsViewerFragment:clips_viewer_clips_tab:2,UserDetailFragment:profile:5,4Ae:clips_profile:6",
+            "x-ig-connection-type": "WIFI",
+            "x-ig-capabilities": "3brTvx0=",
+            "priority": "u=3",
+            "user-agent": "Instagram 207.0.0.39.120 Android (25/7.1.2; 240dpi; 720x1280; google; G011A; G011A; intel; en_US; 321039156)",
+            "accept-language": "en-US",
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "accept-encoding": "gzip, deflate",
+            "host": "i.instagram.com",
+            "x-fb-http-engine": "Liger",
+            "x-fb-client-ip": "True",
+            "x-fb-server-cluster": "True",
+            "connection": "keep-alive"
+        }
+
+        response = requests.request("POST", url, data=payload, headers=headers)
+        
+        for i in response.json()['items']:
+            try:
+                cover=i['media']["image_versions2"]["additional_candidates"]["first_frame"]["url"]
+            except:
+                cover=i['media']["image_versions2"]["candidates"][0]["url"]
+
+            cover=cover_decode(cover)
+
+            download_url=i['media']["video_versions"][-1]["url"]
+            caption=""
+            userr=i['media']['user']["username"]
+            post_url=i['media']["code"]
+            count+=1
+            dat={"post_id":post_url,"cover":cover,"download_url":download_url,"caption":caption,"user":userr}
+            DATA.append(dat)
+        more=response.json()["paging_info"]["more_available"]
+        # print("more",more)
+        if more=="false":
+            return DATA
+        try:
+            max_id=response.json()["paging_info"]["max_id"]
+        except:
+            return DATA
+
+@app.route("/api/instagram-reels", methods=["POST"])
+def getinstaposts():
+    input_json = request.get_json(force=True)
+    username = input_json["username"]
+
+    res = list_of_reels(username)
+    # return json.dumps(res)
+    return jsonify({"success": "true", "videos": res })
+
