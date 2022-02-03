@@ -545,6 +545,10 @@ def list_of_reels(username):
             count+=1
             dat={"post_id":post_url,"cover":cover,"download_url":download_url,"caption":caption,"user":userr}
             DATA.append(dat)
+            
+            if count==30:
+                return DATA
+
         more=response.json()["paging_info"]["more_available"]
         # print("more",more)
         if more=="false":
